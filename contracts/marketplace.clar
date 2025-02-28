@@ -1,12 +1,18 @@
-;; marketplace.clar - Basic Version
+;; marketplace.clar
 ;; Core contract for the NeuralNexus AI Training Marketplace
+;; Handles dataset registration, training job creation, and marketplace operations
 
 ;; Error codes
 (define-constant ERR-NOT-AUTHORIZED (err u401))
+(define-constant ERR-ALREADY-EXISTS (err u402))
 (define-constant ERR-NOT-FOUND (err u404))
+(define-constant ERR-INVALID-PARAMETERS (err u400))
+(define-constant ERR-PAYMENT-FAILED (err u500))
+(define-constant ERR-INSUFFICIENT-FUNDS (err u501))
 
 ;; Constants
 (define-constant CONTRACT-OWNER tx-sender)
+(define-constant PLATFORM-FEE-PERCENT u3) ;; 3% platform fee
 
 ;; Data structures
 ;; Dataset represents training data offered on the marketplace
@@ -17,12 +23,39 @@
     name: (string-ascii 100),
     metadata-url: (string-utf8 256),  ;; URL to encrypted metadata about the dataset
     price-per-use: uint,              ;; Price in microSTX
-    active: bool                      ;; Whether this dataset is available for use
+    access-count: uint,               ;; Number of times this dataset has been used
+    active: bool,                     ;; Whether this dataset is available for use
+    created-at: uint,                 ;; Block height when created
+    category: (string-ascii 50)       ;; Category/domain of the dataset
   }
 )
 
-;; Global counter
+;; Training job represents a request to train a model using specified datasets
+(define-map training-jobs
+  { job-id: uint }
+  {
+    creator: principal,
+    name: (string-ascii 100),
+    datasets: (list 20 uint),         ;; List of dataset IDs to use
+    computation-provider: (optional principal),  ;; Who will run the computation
+    status: (string-ascii 20),        ;; "pending", "processing", "completed", "failed"
+    result-url: (optional (string-utf8 256)),  ;; URL to the trained model (encrypted)
+    total-cost: uint,                 ;; Total cost in microSTX
+    created-at: uint,                 ;; Block height when created
+    completed-at: (optional uint)     ;; Block height when completed
+  }
+)
+
+;; Storage for user balances in the marketplace
+(define-map user-balances
+  { user: principal }
+  { balance: uint }
+)
+
+;; Global counters
 (define-data-var last-dataset-id uint u0)
+(define-data-var last-job-id uint u0)
+
 
 ;; Read-only functions
 
