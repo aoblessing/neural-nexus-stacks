@@ -316,8 +316,8 @@
   )
 )
 
-
 ;; Initialize contract
 (begin
   (var-set last-dataset-id u0)
+  (var-set last-job-id u0)
 )
