@@ -144,6 +144,53 @@
   )
 )
 
+;; Create a new training job
+(define-public (create-training-job
+    (name (string-ascii 100))
+    (dataset-ids (list 20 uint)))
+  (let 
+    (
+      (new-id (+ (var-get last-job-id) u1))
+      (block-height block-height)
+      (total-cost (fold calculate-job-cost dataset-ids u0))
+      (user-balance (get balance (get-user-balance tx-sender)))
+    )
+    ;; Validate all datasets exist and are active
+    (asserts! (fold validate-datasets dataset-ids true) ERR-NOT-FOUND)
+
+    ;; Check if user has enough balance
+    (asserts! (>= user-balance total-cost) ERR-INSUFFICIENT-FUNDS)
+
+    ;; Create the job
+    (map-set training-jobs
+      { job-id: new-id }
+      {
+        creator: tx-sender,
+        name: name,
+        datasets: dataset-ids,
+        computation-provider: none,
+        status: "pending",
+        result-url: none,
+        total-cost: total-cost,
+        created-at: block-height,
+        completed-at: none
+      }
+    )
+
+    ;; Deduct balance from user
+    (map-set user-balances 
+      { user: tx-sender }
+      { balance: (- user-balance total-cost) }
+    )
+
+    ;; Update the job counter
+    (var-set last-job-id new-id)
+
+    ;; Return success with the new job ID
+    (ok new-id)
+  )
+)
+
 
 ;; Initialize contract
 (begin
