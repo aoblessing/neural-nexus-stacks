@@ -286,6 +286,36 @@
   )
 )
 
+;; Private functions
+
+;; Calculate cost for a training job
+(define-private (calculate-job-cost (dataset-id uint) (current-total uint))
+  (match (map-get? datasets { dataset-id: dataset-id })
+    dataset (+ current-total (get price-per-use dataset))
+    current-total
+  )
+)
+
+;; Validate that datasets exist and are active
+(define-private (validate-datasets (dataset-id uint) (valid bool))
+  (match (map-get? datasets { dataset-id: dataset-id })
+    dataset (and valid (get active dataset))
+    false
+  )
+)
+
+;; Increment the access count for a dataset
+(define-private (increment-dataset-access-count (dataset-id uint))
+  (match (map-get? datasets { dataset-id: dataset-id })
+    dataset 
+    (map-set datasets
+      { dataset-id: dataset-id }
+      (merge dataset { access-count: (+ (get access-count dataset) u1) })
+    )
+    false
+  )
+)
+
 
 ;; Initialize contract
 (begin
