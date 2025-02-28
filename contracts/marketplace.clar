@@ -86,10 +86,12 @@
 (define-public (register-dataset 
     (name (string-ascii 100)) 
     (metadata-url (string-utf8 256)) 
-    (price-per-use uint))
+    (price-per-use uint)
+    (category (string-ascii 50)))
   (let 
     (
       (new-id (+ (var-get last-dataset-id) u1))
+      (block-height block-height)
     )
     ;; Create the new dataset entry
     (map-set datasets
@@ -99,7 +101,10 @@
         name: name,
         metadata-url: metadata-url,
         price-per-use: price-per-use,
-        active: true
+        access-count: u0,
+        active: true,
+        created-at: block-height,
+        category: category
       }
     )
     ;; Update the counter
@@ -115,28 +120,30 @@
     (name (string-ascii 100)) 
     (metadata-url (string-utf8 256)) 
     (price-per-use uint)
-    (active bool))
+    (active bool)
+    (category (string-ascii 50)))
   (let 
     (
       (dataset (unwrap! (map-get? datasets { dataset-id: dataset-id }) ERR-NOT-FOUND))
     )
     ;; Check authorization
     (asserts! (is-eq tx-sender (get owner dataset)) ERR-NOT-AUTHORIZED)
-
+    
     ;; Update the dataset
     (map-set datasets
       { dataset-id: dataset-id }
-      {
-        owner: tx-sender,
+      (merge dataset {
         name: name,
         metadata-url: metadata-url,
         price-per-use: price-per-use,
-        active: active
-      }
+        active: active,
+        category: category
+      })
     )
     (ok true)
   )
 )
+
 
 ;; Initialize contract
 (begin
