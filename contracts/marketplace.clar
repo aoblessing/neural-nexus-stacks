@@ -23,3 +23,10 @@
 
 ;; Global counter
 (define-data-var last-dataset-id uint u0)
+
+;; Read-only functions
+
+;; Get dataset details
+(define-read-only (get-dataset (dataset-id uint))
+  (map-get? datasets { dataset-id: dataset-id })
+)
