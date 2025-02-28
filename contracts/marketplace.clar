@@ -88,3 +88,8 @@
     (ok true)
   )
 )
+
+;; Initialize contract
+(begin
+  (var-set last-dataset-id u0)
+)
