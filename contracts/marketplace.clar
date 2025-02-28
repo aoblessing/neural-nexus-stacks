@@ -30,3 +30,32 @@
 (define-read-only (get-dataset (dataset-id uint))
   (map-get? datasets { dataset-id: dataset-id })
 )
+
+;; Public functions
+
+;; Register a new dataset on the marketplace
+(define-public (register-dataset 
+    (name (string-ascii 100)) 
+    (metadata-url (string-utf8 256)) 
+    (price-per-use uint))
+  (let 
+    (
+      (new-id (+ (var-get last-dataset-id) u1))
+    )
+    ;; Create the new dataset entry
+    (map-set datasets
+      { dataset-id: new-id }
+      {
+        owner: tx-sender,
+        name: name,
+        metadata-url: metadata-url,
+        price-per-use: price-per-use,
+        active: true
+      }
+    )
+    ;; Update the counter
+    (var-set last-dataset-id new-id)
+    ;; Return success with the new dataset ID
+    (ok new-id)
+  )
+)
