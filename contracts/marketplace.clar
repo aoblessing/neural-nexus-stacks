@@ -245,6 +245,47 @@
   )
 )
 
+;; Deposit funds into marketplace balance
+(define-public (deposit-funds (amount uint))
+  (let
+    (
+      (user-balance (get balance (get-user-balance tx-sender)))
+    )
+    ;; Transfer STX from user to contract
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+
+    ;; Update user balance
+    (map-set user-balances
+      { user: tx-sender }
+      { balance: (+ user-balance amount) }
+    )
+
+    (ok true)
+  )
+)
+
+;; Withdraw funds from marketplace balance
+(define-public (withdraw-funds (amount uint))
+  (let
+    (
+      (user-balance (get balance (get-user-balance tx-sender)))
+    )
+    ;; Check if user has enough balance
+    (asserts! (>= user-balance amount) ERR-INSUFFICIENT-FUNDS)
+
+    ;; Transfer STX from contract to user
+    (try! (as-contract (stx-transfer? amount tx-sender tx-sender)))
+
+    ;; Update user balance
+    (map-set user-balances
+      { user: tx-sender }
+      { balance: (- user-balance amount) }
+    )
+
+    (ok true)
+  )
+)
+
 
 ;; Initialize contract
 (begin
