@@ -64,6 +64,22 @@
   (map-get? datasets { dataset-id: dataset-id })
 )
 
+;; Get training job details
+(define-read-only (get-training-job (job-id uint))
+  (map-get? training-jobs { job-id: job-id })
+)
+
+;; Get user's current balance in the marketplace
+(define-read-only (get-user-balance (user principal))
+  (default-to { balance: u0 } (map-get? user-balances { user: user }))
+)
+
+;; Get platform fee percentage
+(define-read-only (get-platform-fee)
+  PLATFORM-FEE-PERCENT
+)
+
+
 ;; Public functions
 
 ;; Register a new dataset on the marketplace
