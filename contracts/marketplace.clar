@@ -59,3 +59,32 @@
     (ok new-id)
   )
 )
+
+;; Update dataset information
+(define-public (update-dataset 
+    (dataset-id uint) 
+    (name (string-ascii 100)) 
+    (metadata-url (string-utf8 256)) 
+    (price-per-use uint)
+    (active bool))
+  (let 
+    (
+      (dataset (unwrap! (map-get? datasets { dataset-id: dataset-id }) ERR-NOT-FOUND))
+    )
+    ;; Check authorization
+    (asserts! (is-eq tx-sender (get owner dataset)) ERR-NOT-AUTHORIZED)
+
+    ;; Update the dataset
+    (map-set datasets
+      { dataset-id: dataset-id }
+      {
+        owner: tx-sender,
+        name: name,
+        metadata-url: metadata-url,
+        price-per-use: price-per-use,
+        active: active
+      }
+    )
+    (ok true)
+  )
+)
